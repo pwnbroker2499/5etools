@@ -63,6 +63,8 @@ class ListPage {
 		this._ixData = 0;
 		this._bookView = null;
 		this._$pgContent = null;
+
+		this._seenHashes = new Set();
 	}
 
 	_bookView_popTblGetNumShown ({$wrpContent, $dispName, $wrpControls}, {fnPartition} = {}) {
@@ -246,7 +248,6 @@ class ListPage {
 
 		this._dataProps.forEach(prop => {
 			if (!data[prop]) return;
-			data[prop].forEach(it => it.__prop = prop);
 			this._dataList.push(...data[prop]);
 		});
 
