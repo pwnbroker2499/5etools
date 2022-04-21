@@ -6,8 +6,8 @@ IS_NODE = typeof module !== "undefined";
 if (IS_NODE) require("./parser.js");
 
 // in deployment, `IS_DEPLOYED = "<version number>";` should be set below.
-IS_DEPLOYED="v1.153.1";
-VERSION_NUMBER = /* 5ETOOLS_VERSION__OPEN */"1.153.1"/* 5ETOOLS_VERSION__CLOSE */;
+IS_DEPLOYED="v1.153.2";
+VERSION_NUMBER = /* 5ETOOLS_VERSION__OPEN */"1.153.2"/* 5ETOOLS_VERSION__CLOSE */;
 DEPLOYED_STATIC_ROOT = ""; // "https://static.5etools.com/"; // FIXME re-enable this when we have a CDN again
 // for the roll20 script to set
 IS_VTT = false;
@@ -3231,7 +3231,7 @@ DataUtil = {
 			function doMod_insertArr (modInfo, prop) {
 				doEnsureArray(modInfo, "items");
 				if (!copyTo[prop]) throw new Error(`${msgPtFailed} Could not find "${prop}" array`);
-				copyTo[prop].splice(modInfo.index, 0, ...modInfo.items);
+				copyTo[prop].splice(~modInfo.index ? modInfo.index : copyTo[prop].length, 0, ...modInfo.items);
 			}
 
 			function doMod_removeArr (modInfo, prop) {
