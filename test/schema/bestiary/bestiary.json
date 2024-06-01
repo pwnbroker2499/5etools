@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"version": "1.21.3",
+	"version": "1.21.7",
 	"title": "Bestiary Schema",
 	"$id": "bestiary.json",
 	"type": "object",
@@ -560,6 +560,12 @@
 				"actionNote": {
 					"type": "string"
 				},
+				"actionHeader": {
+					"type": "array",
+					"items": {
+						"$ref": "../entry.json"
+					}
+				},
 				"action": {
 					"oneOf": [
 						{
@@ -589,6 +595,15 @@
 						}
 					]
 				},
+				"bonusNote": {
+					"type": "string"
+				},
+				"bonusHeader": {
+					"type": "array",
+					"items": {
+						"$ref": "../entry.json"
+					}
+				},
 				"bonus": {
 					"type": "array",
 					"items": {
@@ -609,6 +624,15 @@
 							"entries"
 						],
 						"additionalProperties": false
+					}
+				},
+				"reactionNote": {
+					"type": "string"
+				},
+				"reactionHeader": {
+					"type": "array",
+					"items": {
+						"$ref": "../entry.json"
 					}
 				},
 				"reaction": {
@@ -853,6 +877,7 @@
 							"Turn Immunity",
 							"Turn Resistance",
 							"Undead Fortitude",
+							"Unusual Nature",
 							"Water Breathing",
 							"Web Sense",
 							"Web Walker"
@@ -931,12 +956,13 @@
 					"type": "array",
 					"items": {
 						"type": "string",
-						"description": "P: Psionics\n I: Innate\n F: Form Only\n S: Shared\n CA: Class, Artificer\n CB: Class, Bard\n CC: Class, Cleric\n CD: Class, Druid\n CP: Class, Paladin\n CR: Class, Ranger\n CS: Class, Sorcerer\n CL: Class, Warlock\n CW: Class, Wizard",
+						"description": "P: Psionics\n I: Innate\n F: Form Only\n S: Shared\n O: Other\n CA: Class, Artificer\n CB: Class, Bard\n CC: Class, Cleric\n CD: Class, Druid\n CP: Class, Paladin\n CR: Class, Ranger\n CS: Class, Sorcerer\n CL: Class, Warlock\n CW: Class, Wizard",
 						"enum": [
 							"P",
 							"I",
 							"F",
 							"S",
+							"O",
 							"CA",
 							"CB",
 							"CC",
@@ -970,9 +996,10 @@
 				"miscTags": {
 					"type": "array",
 					"items": {
-						"description": "AOE: Has Areas of Effect\n MW: Has Weapon Attacks, Melee\n RW: Has Weapon Attacks, Ranged\n RCH: Has Reach Attacks\n RNG: Has Ranged Weapons\n THW: Has Thrown Weapons",
+						"description": "AOE: Has Areas of Effect\n HPR: Has HP Reduction\n MW: Has Weapon Attacks, Melee\n RW: Has Weapon Attacks, Ranged\n RCH: Has Reach Attacks\n RNG: Has Ranged Weapons\n THW: Has Thrown Weapons",
 						"enum": [
 							"AOE",
+							"HPR",
 							"MW",
 							"RW",
 							"RCH",
@@ -1006,6 +1033,10 @@
 				"summonedBySpell": {
 					"description": "The spell used to summon this creature; specifically for TCE-esque summon spells.",
 					"type": "string"
+				},
+				"summonedBySpellLevel": {
+					"description": "The level of the spell used to summon this creature; specifically for TCE-esque summon spells.",
+					"type": "integer"
 				},
 				"summonedByClass": {
 					"description": "The class which can summon this creature; e.g. for those granted by some TCE class features.",
@@ -1504,6 +1535,12 @@
 						"actionNote": {
 							"type": "string"
 						},
+						"actionHeader": {
+							"type": "array",
+							"items": {
+								"$ref": "../entry.json"
+							}
+						},
 						"action": {
 							"oneOf": [
 								{
@@ -1533,6 +1570,15 @@
 								}
 							]
 						},
+						"bonusNote": {
+							"type": "string"
+						},
+						"bonusHeader": {
+							"type": "array",
+							"items": {
+								"$ref": "../entry.json"
+							}
+						},
 						"bonus": {
 							"type": "array",
 							"items": {
@@ -1553,6 +1599,15 @@
 									"entries"
 								],
 								"additionalProperties": false
+							}
+						},
+						"reactionNote": {
+							"type": "string"
+						},
+						"reactionHeader": {
+							"type": "array",
+							"items": {
+								"$ref": "../entry.json"
 							}
 						},
 						"reaction": {
@@ -1797,6 +1852,7 @@
 									"Turn Immunity",
 									"Turn Resistance",
 									"Undead Fortitude",
+									"Unusual Nature",
 									"Water Breathing",
 									"Web Sense",
 									"Web Walker"
@@ -1875,12 +1931,13 @@
 							"type": "array",
 							"items": {
 								"type": "string",
-								"description": "P: Psionics\n I: Innate\n F: Form Only\n S: Shared\n CA: Class, Artificer\n CB: Class, Bard\n CC: Class, Cleric\n CD: Class, Druid\n CP: Class, Paladin\n CR: Class, Ranger\n CS: Class, Sorcerer\n CL: Class, Warlock\n CW: Class, Wizard",
+								"description": "P: Psionics\n I: Innate\n F: Form Only\n S: Shared\n O: Other\n CA: Class, Artificer\n CB: Class, Bard\n CC: Class, Cleric\n CD: Class, Druid\n CP: Class, Paladin\n CR: Class, Ranger\n CS: Class, Sorcerer\n CL: Class, Warlock\n CW: Class, Wizard",
 								"enum": [
 									"P",
 									"I",
 									"F",
 									"S",
+									"O",
 									"CA",
 									"CB",
 									"CC",
@@ -1914,9 +1971,10 @@
 						"miscTags": {
 							"type": "array",
 							"items": {
-								"description": "AOE: Has Areas of Effect\n MW: Has Weapon Attacks, Melee\n RW: Has Weapon Attacks, Ranged\n RCH: Has Reach Attacks\n RNG: Has Ranged Weapons\n THW: Has Thrown Weapons",
+								"description": "AOE: Has Areas of Effect\n HPR: Has HP Reduction\n MW: Has Weapon Attacks, Melee\n RW: Has Weapon Attacks, Ranged\n RCH: Has Reach Attacks\n RNG: Has Ranged Weapons\n THW: Has Thrown Weapons",
 								"enum": [
 									"AOE",
+									"HPR",
 									"MW",
 									"RW",
 									"RCH",
@@ -1950,6 +2008,10 @@
 						"summonedBySpell": {
 							"description": "The spell used to summon this creature; specifically for TCE-esque summon spells.",
 							"type": "string"
+						},
+						"summonedBySpellLevel": {
+							"description": "The level of the spell used to summon this creature; specifically for TCE-esque summon spells.",
+							"type": "integer"
 						},
 						"summonedByClass": {
 							"description": "The class which can summon this creature; e.g. for those granted by some TCE class features.",
@@ -2463,6 +2525,12 @@
 						"actionNote": {
 							"type": "string"
 						},
+						"actionHeader": {
+							"type": "array",
+							"items": {
+								"$ref": "../entry.json"
+							}
+						},
 						"action": {
 							"oneOf": [
 								{
@@ -2492,6 +2560,15 @@
 								}
 							]
 						},
+						"bonusNote": {
+							"type": "string"
+						},
+						"bonusHeader": {
+							"type": "array",
+							"items": {
+								"$ref": "../entry.json"
+							}
+						},
 						"bonus": {
 							"type": "array",
 							"items": {
@@ -2512,6 +2589,15 @@
 									"entries"
 								],
 								"additionalProperties": false
+							}
+						},
+						"reactionNote": {
+							"type": "string"
+						},
+						"reactionHeader": {
+							"type": "array",
+							"items": {
+								"$ref": "../entry.json"
 							}
 						},
 						"reaction": {
@@ -2756,6 +2842,7 @@
 									"Turn Immunity",
 									"Turn Resistance",
 									"Undead Fortitude",
+									"Unusual Nature",
 									"Water Breathing",
 									"Web Sense",
 									"Web Walker"
@@ -2834,12 +2921,13 @@
 							"type": "array",
 							"items": {
 								"type": "string",
-								"description": "P: Psionics\n I: Innate\n F: Form Only\n S: Shared\n CA: Class, Artificer\n CB: Class, Bard\n CC: Class, Cleric\n CD: Class, Druid\n CP: Class, Paladin\n CR: Class, Ranger\n CS: Class, Sorcerer\n CL: Class, Warlock\n CW: Class, Wizard",
+								"description": "P: Psionics\n I: Innate\n F: Form Only\n S: Shared\n O: Other\n CA: Class, Artificer\n CB: Class, Bard\n CC: Class, Cleric\n CD: Class, Druid\n CP: Class, Paladin\n CR: Class, Ranger\n CS: Class, Sorcerer\n CL: Class, Warlock\n CW: Class, Wizard",
 								"enum": [
 									"P",
 									"I",
 									"F",
 									"S",
+									"O",
 									"CA",
 									"CB",
 									"CC",
@@ -2873,9 +2961,10 @@
 						"miscTags": {
 							"type": "array",
 							"items": {
-								"description": "AOE: Has Areas of Effect\n MW: Has Weapon Attacks, Melee\n RW: Has Weapon Attacks, Ranged\n RCH: Has Reach Attacks\n RNG: Has Ranged Weapons\n THW: Has Thrown Weapons",
+								"description": "AOE: Has Areas of Effect\n HPR: Has HP Reduction\n MW: Has Weapon Attacks, Melee\n RW: Has Weapon Attacks, Ranged\n RCH: Has Reach Attacks\n RNG: Has Ranged Weapons\n THW: Has Thrown Weapons",
 								"enum": [
 									"AOE",
+									"HPR",
 									"MW",
 									"RW",
 									"RCH",
@@ -2909,6 +2998,10 @@
 						"summonedBySpell": {
 							"description": "The spell used to summon this creature; specifically for TCE-esque summon spells.",
 							"type": "string"
+						},
+						"summonedBySpellLevel": {
+							"description": "The level of the spell used to summon this creature; specifically for TCE-esque summon spells.",
+							"type": "integer"
 						},
 						"summonedByClass": {
 							"description": "The class which can summon this creature; e.g. for those granted by some TCE class features.",
@@ -3085,6 +3178,9 @@
 						"srd": {
 							"$ref": "../util.json#/definitions/srd"
 						},
+						"basicRules": {
+							"$ref": "../util.json#/definitions/basicRules"
+						},
 						"data": {
 							"description": "A generic object for storing special data for external use-cases. Keys prefixed with \"rd-\" should be added as \"data-\" HTML attributes when rendering to HTML.",
 							"type": "object"
@@ -3182,6 +3278,9 @@
 						},
 						"srd": {
 							"$ref": "../util.json#/definitions/srd"
+						},
+						"basicRules": {
+							"$ref": "../util.json#/definitions/basicRules"
 						},
 						"data": {
 							"description": "A generic object for storing special data for external use-cases. Keys prefixed with \"rd-\" should be added as \"data-\" HTML attributes when rendering to HTML.",

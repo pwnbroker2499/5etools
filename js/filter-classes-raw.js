@@ -38,9 +38,11 @@ class PageFilterClassesRaw extends PageFilterClassesBase {
 		// Search in base classes
 		let baseClass = (await DataUtil.class.loadRawJSON()).class.find(bc => bc.name.toLowerCase() === sc.className.toLowerCase() && (bc.source.toLowerCase() || SRC_PHB) === sc.classSource.toLowerCase());
 
+		const brew = BrewUtil2.pGetBrewProcessed();
+
 		// Search in brew classes
 		if (!baseClass) {
-			baseClass = (BrewUtil.homebrew.class || []).find(bc => bc.name.toLowerCase() === sc.className.toLowerCase() && (bc.source.toLowerCase() || SRC_PHB) === sc.classSource.toLowerCase());
+			baseClass = (brew.class || []).find(bc => bc.name.toLowerCase() === sc.className.toLowerCase() && (bc.source.toLowerCase() || SRC_PHB) === sc.classSource.toLowerCase());
 		}
 
 		return baseClass;
@@ -50,7 +52,7 @@ class PageFilterClassesRaw extends PageFilterClassesBase {
 		data = MiscUtil.copy(data);
 
 		// Ensure homebrew is initialised
-		await BrewUtil.pAddBrewData();
+		await BrewUtil2.pGetBrewProcessed();
 
 		if (!data.class) data.class = [];
 
@@ -121,17 +123,17 @@ class PageFilterClassesRaw extends PageFilterClassesBase {
 		// Load the data once before diving into nested promises, to avoid needless context switching
 		await this._pPreloadSideData();
 
-		await Promise.all(data.class.map(async cls => {
-			await Promise.all((cls.classFeatures || []).map(cf => this.pInitClassFeatureLoadeds({...opts, classFeature: cf, className: cls.name})));
+		for (const cls of data.class) {
+			await (cls.classFeatures || []).pSerialAwaitMap(cf => this.pInitClassFeatureLoadeds({...opts, classFeature: cf, className: cls.name}));
 
 			if (cls.classFeatures) cls.classFeatures = cls.classFeatures.filter(it => !it.isIgnored);
 
-			await Promise.all((cls.subclasses || []).map(async sc => {
-				await Promise.all((sc.subclassFeatures || []).map(scf => this.pInitSubclassFeatureLoadeds({...opts, subclassFeature: scf, className: cls.name, subclassName: sc.name})));
+			for (const sc of cls.subclasses || []) {
+				await (sc.subclassFeatures || []).pSerialAwaitMap(scf => this.pInitSubclassFeatureLoadeds({...opts, subclassFeature: scf, className: cls.name, subclassName: sc.name}));
 
 				if (sc.subclassFeatures) sc.subclassFeatures = sc.subclassFeatures.filter(it => !it.isIgnored);
-			}));
-		}));
+			}
+		}
 
 		// Add synthetic fluff to subclasses
 		data.class.forEach(cls => {
@@ -142,7 +144,7 @@ class PageFilterClassesRaw extends PageFilterClassesBase {
 			});
 		});
 
-		return data.class;
+		return data;
 	}
 
 	static async pInitClassFeatureLoadeds ({classFeature, className, ...opts}) {
@@ -630,7 +632,7 @@ class ModalFilterClasses extends ModalFilter {
 	async pGetUserSelection ({filterExpression = null, selectedClass = null, selectedSubclass = null, isClassDisabled = false, isSubclassDisabled = false} = {}) {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async resolve => {
-			const {$modalInner, doClose} = this._getShowModal(resolve);
+			const {$modalInner, doClose} = await this._pGetShowModal(resolve);
 
 			await this.pPreloadHidden($modalInner);
 
@@ -808,14 +810,24 @@ class ModalFilterClasses extends ModalFilter {
 			if (li.data.ixSubclass != null) {
 				const sc = cls.subclasses[li.data.ixSubclass];
 				// Both the subclass and the class must be displayed
-				return pageFilter.toDisplay(f, cls) && pageFilter.filterBox.toDisplay(
+				if (
+					!pageFilter.toDisplay(
+						f,
+						cls,
+						[],
+						null,
+					)
+				) return false;
+
+				return pageFilter.filterBox.toDisplay(
 					f,
 					sc.source,
 					sc._fMisc,
+					null,
 				);
 			}
 
-			return pageFilter.toDisplay(f, cls);
+			return pageFilter.toDisplay(f, cls, [], null);
 		});
 	}
 
@@ -863,19 +875,23 @@ class ModalFilterClasses extends ModalFilter {
 		// endregion
 	}
 
-	/** Caches the result for fast re-querying. Note that brew added after the initial load will not be available. */
+	/** Caches the result for fast re-querying. */
 	async _pLoadAllData () {
 		this._pLoadingAllData = this._pLoadingAllData || (async () => {
 			const [data, brew] = await Promise.all([
 				MiscUtil.copy(await DataUtil.class.loadRawJSON()),
-				BrewUtil.pAddBrewData(),
+				BrewUtil2.pGetBrewProcessed(),
 			]);
 
 			// Combine main data with brew
-			const clsProps = BrewUtil.getPageProps(UrlUtil.PG_CLASSES);
-			clsProps.forEach(prop => data[prop] = [...data[prop] || [], ...MiscUtil.copy(brew[prop] || [])]);
+			const clsProps = BrewUtil2.getPageProps({page: UrlUtil.PG_CLASSES});
+			if (clsProps.includes("*")) {
+				Object.entries(brew)
+					.filter(([, brewVal]) => brewVal instanceof Array)
+					.forEach(([prop, brewArr]) => data[prop] = [...(data[prop] || []), ...MiscUtil.copy(brewArr)]);
+			} else clsProps.forEach(prop => data[prop] = [...(data[prop] || []), ...MiscUtil.copy(brew[prop] || [])]);
 
-			this._allData = await PageFilterClassesRaw.pPostLoad(data);
+			this._allData = (await PageFilterClassesRaw.pPostLoad(data)).class;
 		})();
 
 		await this._pLoadingAllData;
@@ -891,13 +907,13 @@ class ModalFilterClasses extends ModalFilter {
 
 	_getListItems_getClassItem (pageFilter, cls, clsI) {
 		const eleLabel = document.createElement("label");
-		eleLabel.className = "w-100 ve-flex lst--border no-select lst__wrp-cells";
+		eleLabel.className = `w-100 ve-flex lst--border veapp__list-row no-select lst__wrp-cells ${cls._versionBase_isVersion ? "ve-muted" : ""}`;
 
 		const source = Parser.sourceJsonToAbv(cls.source);
 
 		eleLabel.innerHTML = `<div class="col-1 pl-0 ve-flex-vh-center"><div class="fltr-cls__tgl"></div></div>
 		<div class="bold col-9">${cls.name}</div>
-		<div class="col-2 pr-0 text-center ${Parser.sourceJsonToColor(cls.source)}" title="${Parser.sourceJsonToFull(cls.source)}" ${BrewUtil.sourceJsonToStyle(cls.source)}>${source}</div>`;
+		<div class="col-2 pr-0 text-center ${Parser.sourceJsonToColor(cls.source)}" title="${Parser.sourceJsonToFull(cls.source)}" ${BrewUtil2.sourceJsonToStyle(cls.source)}>${source}</div>`;
 
 		return new ListItem(
 			clsI,
@@ -915,13 +931,13 @@ class ModalFilterClasses extends ModalFilter {
 
 	_getListItems_getSubclassItem (pageFilter, cls, clsI, sc, scI) {
 		const eleLabel = document.createElement("label");
-		eleLabel.className = "w-100 ve-flex lst--border no-select lst__wrp-cells";
+		eleLabel.className = `w-100 ve-flex lst--border veapp__list-row no-select lst__wrp-cells ${sc._versionBase_isVersion ? "ve-muted" : ""}`;
 
 		const source = Parser.sourceJsonToAbv(sc.source);
 
 		eleLabel.innerHTML = `<div class="col-1 pl-0 ve-flex-vh-center"><div class="fltr-cls__tgl"></div></div>
 		<div class="col-9 pl-1 ve-flex-v-center"><span class="mx-3">\u2014</span> ${sc.name}</div>
-		<div class="col-2 pr-0 text-center ${Parser.sourceJsonToColor(sc.source)}" title="${Parser.sourceJsonToFull(sc.source)}" ${BrewUtil.sourceJsonToStyle(sc.source)}>${source}</div>`;
+		<div class="col-2 pr-0 text-center ${Parser.sourceJsonToColor(sc.source)}" title="${Parser.sourceJsonToFull(sc.source)}" ${BrewUtil2.sourceJsonToStyle(sc.source)}>${source}</div>`;
 
 		return new ListItem(
 			`${clsI}--${scI}`,

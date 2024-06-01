@@ -40,7 +40,7 @@ class SpellBuilder extends Builder {
 		delete spell.srd;
 		delete spell.uniqueId;
 
-		const meta = {...(opts.meta || {}), ...this.getInitialMetaState()};
+		const meta = {...(opts.meta || {}), ...this._getInitialMetaState()};
 
 		this.setStateFromLoaded({s: spell, m: meta});
 
@@ -48,12 +48,13 @@ class SpellBuilder extends Builder {
 		this.renderOutput();
 	}
 
-	async pInit () {
+	async _pInit () {
 		this._subclassLookup = await DataUtil.class.pGetSubclassLookup();
 	}
 
 	_getInitialState () {
 		return {
+			...super._getInitialState(),
 			name: "New Spell",
 			level: 1,
 			school: "A",
@@ -88,10 +89,14 @@ class SpellBuilder extends Builder {
 	}
 
 	setStateFromLoaded (state) {
-		if (state && state.s && state.m) {
-			this.__state = state.s;
-			this.__meta = state.m;
-		}
+		if (!state?.s || !state?.m) return;
+
+		this._doResetProxies();
+
+		if (!state.s.uniqueId) state.s.uniqueId = CryptUtil.uid();
+
+		this.__state = state.s;
+		this.__meta = state.m;
 	}
 
 	doHandleSourcesAdd () {
@@ -114,6 +119,7 @@ class SpellBuilder extends Builder {
 	}
 
 	_renderInputImpl () {
+		this.doCreateProxies();
 		this.renderInputControls();
 		this._renderInputMain();
 	}
@@ -121,7 +127,6 @@ class SpellBuilder extends Builder {
 	_renderInputMain () {
 		this._sourcesCache = MiscUtil.copy(this._ui.allSources);
 		const $wrp = this._ui.$wrpInput.empty();
-		this.doCreateProxies();
 
 		const _cb = () => {
 			// Prefer numerical pages if possible
@@ -132,8 +137,7 @@ class SpellBuilder extends Builder {
 
 			this.renderOutput();
 			this.doUiSave();
-			this.isEntrySaved = false;
-			this.mutSavedButtonText();
+			this._meta.isModified = true;
 		};
 		const cb = MiscUtil.debounce(_cb, 33);
 		this._cbCache = cb; // cache for use when updating sources
@@ -157,7 +161,7 @@ class SpellBuilder extends Builder {
 		tabs.forEach(it => it.$wrpTab.appendTo($wrp));
 
 		// INFO
-		BuilderUi.$getStateIptString("Name", cb, this._state, {nullable: false, callback: () => this.renderSideMenu()}, "name").appendTo(infoTab.$wrpTab);
+		BuilderUi.$getStateIptString("Name", cb, this._state, {nullable: false, callback: () => this.pRenderSideMenu()}, "name").appendTo(infoTab.$wrpTab);
 		this._$selSource = this.$getSourceInput(cb).appendTo(infoTab.$wrpTab);
 		this.__$getOtherSourcesInput(cb).appendTo(infoTab.$wrpTab);
 		BuilderUi.$getStateIptString("Page", cb, this._state, {}, "page").appendTo(infoTab.$wrpTab);
@@ -997,10 +1001,15 @@ class SpellBuilder extends Builder {
 
 	// TODO use this in creature builder (_$eles)
 	_$getSelSource (elesProp, doUpdateState, initialVal) {
-		const $selSource = $(`<select class="form-control input-xs"/>`)
+		const selSource = e_({
+			tag: "select",
+			clazz: "form-control input-xs",
+			children: [...Object.keys(Parser.SOURCE_JSON_TO_FULL), ...this._ui.allSources]
+				.map(srcJson => e_({tag: "option", val: srcJson, text: Parser.sourceJsonToFull(srcJson)})),
+		});
+		const $selSource = $(selSource)
 			.change(() => doUpdateState());
-		[...Object.keys(Parser.SOURCE_JSON_TO_FULL), ...this._ui.allSources]
-			.forEach(srcJson => $selSource.append(`<option value="${srcJson.escapeQuotes()}">${Parser.sourceJsonToFull(srcJson).escapeQuotes()}</option>`));
+
 		if (initialVal != null) $selSource.val(initialVal);
 		(this._$eles[elesProp] = this._$eles[elesProp] || []).push($selSource);
 		return $selSource;
@@ -1008,7 +1017,6 @@ class SpellBuilder extends Builder {
 
 	renderOutput () {
 		this._renderOutputDebounced();
-		this.mutSavedButtonText();
 	}
 
 	_renderOutput () {
@@ -1035,14 +1043,14 @@ class SpellBuilder extends Builder {
 		tabs.forEach(it => it.$wrpTab.appendTo($wrp));
 
 		// Spell
-		const $tblSpell = $(`<table class="stats"/>`).appendTo(spellTab.$wrpTab);
+		const $tblSpell = $(`<table class="w-100 stats"/>`).appendTo(spellTab.$wrpTab);
 		// Make a copy of the spell, and add the data that would be displayed in the spells page
 		const procSpell = MiscUtil.copy(this._state);
 		Renderer.spell.initClasses(procSpell);
-		RenderSpells.$getRenderedSpell(procSpell, this._subclassLookup).appendTo($tblSpell);
+		RenderSpells.$getRenderedSpell(procSpell, this._subclassLookup, {isSkipExcludesRender: true}).appendTo($tblSpell);
 
 		// Info
-		const $tblInfo = $(`<table class="stats"/>`).appendTo(infoTab.$wrpTab);
+		const $tblInfo = $(`<table class="w-100 stats"/>`).appendTo(infoTab.$wrpTab);
 		Renderer.utils.pBuildFluffTab({
 			isImageTab: false,
 			$content: $tblInfo,
@@ -1051,7 +1059,7 @@ class SpellBuilder extends Builder {
 		});
 
 		// Images
-		const $tblImages = $(`<table class="stats"/>`).appendTo(imageTab.$wrpTab);
+		const $tblImages = $(`<table class="w-100 stats"/>`).appendTo(imageTab.$wrpTab);
 		Renderer.utils.pBuildFluffTab({
 			isImageTab: true,
 			$content: $tblImages,
@@ -1060,7 +1068,7 @@ class SpellBuilder extends Builder {
 		});
 
 		// Data
-		const $tblData = $(`<table class="stats stats--book mkbru__wrp-output-tab-data"/>`).appendTo(dataTab.$wrpTab);
+		const $tblData = $(`<table class="w-100 stats stats--book mkbru__wrp-output-tab-data"/>`).appendTo(dataTab.$wrpTab);
 		const asCode = Renderer.get().render({
 			type: "entries",
 			entries: [
@@ -1076,7 +1084,7 @@ class SpellBuilder extends Builder {
 		$tblData.append(Renderer.utils.getBorderTr());
 
 		// Markdown
-		const $tblMarkdown = $(`<table class="stats stats--book mkbru__wrp-output-tab-data"/>`).appendTo(markdownTab.$wrpTab);
+		const $tblMarkdown = $(`<table class="w-100 stats stats--book mkbru__wrp-output-tab-data"/>`).appendTo(markdownTab.$wrpTab);
 		$tblMarkdown.append(Renderer.utils.getBorderTr());
 		$tblMarkdown.append(`<tr><td colspan="6">${this._getRenderedMarkdownCode()}</td></tr>`);
 		$tblMarkdown.append(Renderer.utils.getBorderTr());

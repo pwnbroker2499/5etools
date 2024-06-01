@@ -49,7 +49,7 @@ class Omnidexer {
 		});
 
 		x.forEach(it => Object.keys(it).filter(k => props.has(k))
-			.forEach(k => it[k] = lookup[k][it[k]] || it[k]));
+			.forEach(k => it[k] = lookup[k][it[k]] ?? it[k]));
 		return x;
 	}
 
@@ -61,28 +61,29 @@ class Omnidexer {
 	 * Compute and add an index item.
 	 * @param arbiter The indexer arbiter.
 	 * @param json A raw JSON object of a file, typically containing an array to be indexed.
-	 * @param options Options object.
-	 * @param options.isNoFilter If filtering rules are to be ignored (e.g. for tests).
-	 * @param options.alt Sub-options for alternate indices.
+	 * @param [options] Options object.
+	 * @param [options.isNoFilter] If filtering rules are to be ignored (e.g. for tests).
+	 * @param [options.alt] Sub-options for alternate indices.
 	 */
 	async pAddToIndex (arbiter, json, options) {
 		options = options || {};
 		const index = this._index;
-		let id = this.id;
 
 		const getToAdd = (it, toMerge, i) => {
 			const src = Omnidexer.getProperty(it, arbiter.source || "source");
 			const hash = arbiter.hashBuilder
 				? arbiter.hashBuilder(it, i)
 				: UrlUtil.URL_TO_HASH_BUILDER[arbiter.baseUrl](it);
+			const id = this.id++;
 			const toAdd = {
 				c: arbiter.category,
 				s: this.getMetaId("s", src),
-				id: id++,
+				id,
 				u: hash,
 				p: Omnidexer.getProperty(it, arbiter.page || "page"),
 			};
 			if (arbiter.isHover) toAdd.h = 1;
+			if (arbiter.isFauxPage) toAdd.hx = 1;
 			if (it.srd) toAdd.r = 1;
 			if (options.alt) {
 				if (options.alt.additionalProperties) Object.entries(options.alt.additionalProperties).forEach(([k, getV]) => toAdd[k] = getV(it));
@@ -120,8 +121,6 @@ class Omnidexer {
 				if (it.alias) it.alias.forEach(a => pHandleItem(it, i, a));
 			}
 		}
-
-		this.id = id;
 	}
 
 	/**
@@ -348,6 +347,7 @@ class IndexableFile {
 	 * @param opts.additionalIndexes
 	 * @param opts.isSkipBrew
 	 * @param [opts.pFnPreProcBrew] An un-bound function
+	 * @param [opts.isFauxPage]
 	 */
 	constructor (opts) {
 		this.category = opts.category;
@@ -367,6 +367,7 @@ class IndexableFile {
 		this.additionalIndexes = opts.additionalIndexes;
 		this.isSkipBrew = opts.isSkipBrew;
 		this.pFnPreProcBrew = opts.pFnPreProcBrew;
+		this.isFauxPage = !!opts.isFauxPage;
 	}
 
 	/**
@@ -430,7 +431,7 @@ class IndexableFileMagicVariants extends IndexableFile {
 			file: "magicvariants.json",
 			source: "inherits.source",
 			page: "inherits.page",
-			listProp: "variant",
+			listProp: "magicvariant",
 			baseUrl: "items.html",
 			hashBuilder: (it) => {
 				return UrlUtil.encodeForHash([it.name, it.inherits.source]);
@@ -442,7 +443,7 @@ class IndexableFileMagicVariants extends IndexableFile {
 						else {
 							const baseItemJson = await DataUtil.loadJSON(`data/items-base.json`);
 							const rawBaseItems = {...baseItemJson, baseitem: [...baseItemJson.baseitem]};
-							const brew = await BrewUtil.pAddBrewData();
+							const brew = await BrewUtil2.pGetBrewProcessed();
 							if (brew.baseitem) rawBaseItems.baseitem.push(...brew.baseitem);
 							return Renderer.item.getAllIndexableItems(rawVariants, rawBaseItems);
 						}
@@ -501,6 +502,18 @@ class IndexableFileDiseases extends IndexableFile {
 			category: Parser.CAT_ID_DISEASE,
 			file: "conditionsdiseases.json",
 			listProp: "disease",
+			baseUrl: "conditionsdiseases.html",
+			isHover: true,
+		});
+	}
+}
+
+class IndexableFileStatuses extends IndexableFile {
+	constructor () {
+		super({
+			category: Parser.CAT_ID_STATUS,
+			file: "conditionsdiseases.json",
+			listProp: "status",
 			baseUrl: "conditionsdiseases.html",
 			isHover: true,
 		});
@@ -1113,10 +1126,37 @@ class IndexableFileRecipes extends IndexableFile {
 	}
 }
 
+class IndexableFileSkills extends IndexableFile {
+	constructor () {
+		super({
+			category: Parser.CAT_ID_SKILLS,
+			file: "skills.json",
+			listProp: "skill",
+			baseUrl: "skill",
+			isHover: true,
+			isFauxPage: true,
+		});
+	}
+}
+
+class IndexableFileSenses extends IndexableFile {
+	constructor () {
+		super({
+			category: Parser.CAT_ID_SENSES,
+			file: "senses.json",
+			listProp: "sense",
+			baseUrl: "sense",
+			isHover: true,
+			isFauxPage: true,
+		});
+	}
+}
+
 Omnidexer.TO_INDEX = [
 	new IndexableFileBackgrounds(),
 	new IndexableFileConditions(),
 	new IndexableFileDiseases(),
+	new IndexableFileStatuses(),
 	new IndexableFileFeats(),
 
 	new IndexableFileOptFeatures_EldritchInvocations(),
@@ -1165,6 +1205,8 @@ Omnidexer.TO_INDEX = [
 	new IndexableFileLanguages(),
 	new IndexableFileCharCreationOptions(),
 	new IndexableFileRecipes(),
+	new IndexableFileSkills(),
+	new IndexableFileSenses(),
 ];
 
 class IndexableSpecial {

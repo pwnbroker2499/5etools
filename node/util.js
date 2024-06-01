@@ -121,7 +121,21 @@ function listFiles (opts) {
 	}, []);
 }
 
+function rmDirRecursiveSync (dir) {
+	if (fs.existsSync(dir)) {
+		fs.readdirSync(dir).forEach(file => {
+			const curPath = `${dir}/${file}`;
+			if (fs.lstatSync(curPath).isDirectory()) rmDirRecursiveSync(curPath);
+			else fs.unlinkSync(curPath);
+		});
+		fs.rmdirSync(dir);
+	}
+}
+
 class PatchLoadJson {
+	static _CACHED = null;
+	static _CACHED_RAW = null;
+
 	static patchLoadJson () {
 		PatchLoadJson._CACHED = PatchLoadJson._CACHED || DataUtil.loadJSON;
 		DataUtil.loadJSON = async (url) => {
@@ -129,13 +143,15 @@ class PatchLoadJson {
 			await DataUtil.pDoMetaMerge(url, data);
 			return data;
 		};
+		PatchLoadJson._CACHED_RAW = PatchLoadJson._CACHED_RAW || DataUtil.loadRawJSON;
+		DataUtil.loadRawJSON = async (url) => readJson(url);
 	}
 
 	static unpatchLoadJson () {
 		if (PatchLoadJson._CACHED) DataUtil.loadJSON = PatchLoadJson._CACHED;
+		if (PatchLoadJson._CACHED_RAW) DataUtil.loadRawJSON = PatchLoadJson._CACHED_RAW;
 	}
 }
-PatchLoadJson._CACHED = null;
 
 class ArgParser {
 	static parse () {
@@ -166,4 +182,5 @@ module.exports = {
 	patchLoadJson: PatchLoadJson.patchLoadJson,
 	unpatchLoadJson: PatchLoadJson.unpatchLoadJson,
 	ArgParser,
+	rmDirRecursiveSync,
 };

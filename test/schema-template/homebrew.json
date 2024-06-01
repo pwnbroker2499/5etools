@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"version": "1.7.4",
+	"version": "1.10.0",
 	"type": "object",
 	"description": "Homebrew for 5etools. Should include arrays titled similarly to the main site data, e.g. `spell` or `class`",
 
@@ -95,30 +95,6 @@
 						"additionalProperties": false
 					}
 				},
-				"skills": {
-					"type": "object",
-					"description": "Object keys are Skill names, which can referenced using {@skill <key>} (case sensitive)",
-					"patternProperties": {
-						".*": {
-							"type": "array",
-							"items": {
-								"type": "string"
-							}
-						}
-					}
-				},
-				"senses": {
-					"type": "object",
-					"description": "Object keys are Sense names, which can referenced using {@sense <key>} (case insensitive)",
-					"patternProperties": {
-						".*": {
-							"type": "array",
-							"items": {
-								"type": "string"
-							}
-						}
-					}
-				},
 				"spellSchools": {
 					"type": "object",
 					"description": "Object names are spell school abbreviations (e.g. `\"X\"`); values should be objects with `\"full\"`` (used in the main entry, e.g. \"Evocation\") and `\"short\"` (used in the list view, e.g. `\"Evoc.\"`) key/values.",
@@ -211,6 +187,12 @@
 					"type": "integer",
 					"description": "The epoch timestamp (in seconds) when the homebrew was last modified. Not guaranteed to be anywhere near accurate."
 				},
+				"_dateLastModifiedHash": {
+					"type": "string",
+					"description": "A file hash used to automatically update the value of \"dateLastModified\". Should not be manually created/edited.",
+					"minLength": 10,
+					"maxLength": 10
+				},
 				"currencyConversions": {
 					"type": "object",
 					"description": "Keys should be uniquely-named value conversion objects, and can be referenced from item entities as \"currencyConversion\": \"<MyKey>\". The currency conversion info will then be used when rendering the value of the item.",
@@ -242,7 +224,7 @@
 					}
 				},
 				"dependencies": {
-					"description": "A map of `\"<data property>\": [\"<JsonSource1>\", ..., \"<JsonSourceN>\"]`. Entities from these sources can then be extended/referenced in this file.",
+					"description": "A map of `\"<data property>\": [\"<JsonSource1>\", ..., \"<JsonSourceN>\"]`. Entities from these sources can then be extended/referenced in this file.\nNote: when copying classes/subclasses/class features/subclass features, the array should consist of \"<classIdentifier1>\", ..., \"<classIdentifierN>\" items, where \"classIdentifierN\" matches the keys in \"5etools/data/class/index.json\" (when copying class/etc. homebrew, normal \"source\"-based linking applies).",
 					"type": "object",
 					"patternProperties": {
 						"^[a-zA-Z]+$": {
@@ -278,7 +260,9 @@
 				}
 			},
 			"required": [
-				"sources"
+				"sources",
+				"dateAdded",
+				"dateLastModified"
 			],
 			"additionalProperties": false
 		},
@@ -401,8 +385,8 @@
 		"itemTypeAdditionalEntries": {
 			"$ref": "items-base.json#/properties/itemTypeAdditionalEntries"
 		},
-		"variant": {
-			"$ref": "magicvariants.json#/properties/variant"
+		"magicvariant": {
+			"$ref": "magicvariants.json#/properties/magicvariant"
 		},
 		"linkedLootTables": {
 			"$ref": "magicvariants.json#/properties/linkedLootTables"
@@ -518,7 +502,7 @@
 		"subrace": {
 			"$ref": "races.json#/properties/subrace"
 		},
-		"raceFeature": {
+		"foundryRaceFeature": {
 			"$ref": "foundry-races.json#/properties/raceFeature"
 		},
 		"raceFluff": {
@@ -559,6 +543,12 @@
 		},
 		"vehicleFluff": {
 			"$ref": "fluff-vehicles.json#/properties/vehicleFluff"
+		},
+		"skill": {
+			"$ref": "skills.json#/properties/skill"
+		},
+		"sense": {
+			"$ref": "senses.json#/properties/sense"
 		}
 	},
 	"additionalProperties": false,

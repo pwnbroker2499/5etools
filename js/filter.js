@@ -41,7 +41,7 @@ class PageFilter {
 	static _getClassFilterItem ({className, classSource, isVariantClass, definedInSource}) {
 		const nm = className.split("(")[0].trim();
 		const variantSuffix = isVariantClass ? ` [${definedInSource ? Parser.sourceJsonToAbv(definedInSource) : "Unknown"}]` : "";
-		const sourceSuffix = (SourceUtil.isNonstandardSource(classSource || SRC_PHB) || BrewUtil.hasSourceJson(classSource || SRC_PHB))
+		const sourceSuffix = (SourceUtil.isNonstandardSource(classSource || SRC_PHB) || BrewUtil2.hasSourceJson(classSource || SRC_PHB))
 			? ` (${Parser.sourceJsonToAbv(classSource)})` : "";
 		const name = `${nm}${variantSuffix}${sourceSuffix}`;
 
@@ -272,7 +272,7 @@ class ModalFilter {
 	async pGetUserSelection ({filterExpression = null} = {}) {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async resolve => {
-			const {$modalInner, doClose} = this._getShowModal(resolve);
+			const {$modalInner, doClose} = await this._pGetShowModal(resolve);
 
 			await this.pPreloadHidden($modalInner);
 
@@ -297,8 +297,8 @@ class ModalFilter {
 		});
 	}
 
-	_getShowModal (resolve) {
-		const {$modalInner, doClose} = UiUtil.getShowModal({
+	async _pGetShowModal (resolve) {
+		const {$modalInner, doClose} = await UiUtil.pGetShowModal({
 			isHeight100: true,
 			isWidth100: true,
 			title: `Filter/Search for ${this._modalTitle}`,
@@ -570,7 +570,7 @@ class FilterBox extends ProxyBase {
 
 		const sourceFilter = this._filters.find(it => it.header === FilterBox.SOURCE_HEADER);
 		if (sourceFilter) {
-			const selFnAlt = (val) => !SourceUtil.isNonstandardSource(val) && !BrewUtil.hasSourceJson(val);
+			const selFnAlt = (val) => !SourceUtil.isNonstandardSource(val) && !BrewUtil2.hasSourceJson(val);
 			const hkSelFn = () => {
 				if (this._meta.isBrewDefaultHidden) sourceFilter.setTempFnSel(selFnAlt);
 				else sourceFilter.setTempFnSel(null);
@@ -583,16 +583,17 @@ class FilterBox extends ProxyBase {
 		if (this._$wrpMiniPills) this._filters.map((f, i) => f.$renderMinis({filterBox: this, isFirst: i === 0, $wrpMini: this._$wrpMiniPills}));
 	}
 
-	_render_renderModal () {
+	async _render_pRenderModal () {
 		this._isModalRendered = true;
 
-		this._modalMeta = UiUtil.getShowModal({
+		this._modalMeta = await UiUtil.pGetShowModal({
 			isHeight100: true,
 			isWidth100: true,
 			isUncappedHeight: true,
 			isIndestructible: true,
 			isClosed: true,
 			isEmpty: true,
+			title: "Filter", // Not shown due toe `isEmpty`, but useful for external overrides
 			cbClose: (isDataEntered) => this._pHandleHide(!isDataEntered),
 		});
 
@@ -616,14 +617,14 @@ class FilterBox extends ProxyBase {
 			.click(evt => this.reset(evt.shiftKey));
 
 		const $btnSettings = $(`<button class="btn btn-xs btn-default mr-3"><span class="glyphicon glyphicon-cog"></span></button>`)
-			.click(() => this._openSettingsModal());
+			.click(() => this._pOpenSettingsModal());
 
 		const $btnSaveAlt = $(`<button class="btn btn-xs btn-primary" title="Save"><span class="glyphicon glyphicon-ok"></span></button>`)
 			.click(() => this._modalMeta.doClose(true));
 
 		const $wrpBtnCombineFilters = $(`<div class="btn-group mr-3"></div>`);
 		const $btnCombineFilterSettings = $(`<button class="btn btn-xs btn-default"><span class="glyphicon glyphicon-cog"></span></button>`)
-			.click(() => this._openCombineAsModal());
+			.click(() => this._pOpenCombineAsModal());
 
 		const btnCombineFiltersAs = e_({
 			tag: "button",
@@ -678,8 +679,8 @@ class FilterBox extends ProxyBase {
 		<div class="w-100 ve-flex-vh-center my-1">${$btnSave}${$btnCancel}</div>`;
 	}
 
-	_openSettingsModal () {
-		const {$modalInner} = UiUtil.getShowModal({title: "Settings"});
+	async _pOpenSettingsModal () {
+		const {$modalInner} = await UiUtil.pGetShowModal({title: "Settings"});
 
 		UiUtil.$getAddModalRowCb($modalInner, "Deselect Homebrew Sources by Default", this._meta, "isBrewDefaultHidden");
 
@@ -700,8 +701,8 @@ class FilterBox extends ProxyBase {
 			});
 	}
 
-	_openCombineAsModal () {
-		const {$modalInner} = UiUtil.getShowModal({title: "Filter Combination Logic"});
+	async _pOpenCombineAsModal () {
+		const {$modalInner} = await UiUtil.pGetShowModal({title: "Filter Combination Logic"});
 		const $btnReset = $(`<button class="btn btn-xs btn-default">Reset</button>`)
 			.click(() => {
 				Object.keys(this._combineAs).forEach(k => this._combineAs[k] = "and");
@@ -744,8 +745,8 @@ class FilterBox extends ProxyBase {
 		this.fireChangeEvent();
 	}
 
-	show () {
-		if (!this._isModalRendered) this._render_renderModal();
+	async show () {
+		if (!this._isModalRendered) await this._render_pRenderModal();
 		this._cachedState = this._getSaveableState();
 		this._modalMeta.doOpen();
 	}
@@ -786,6 +787,7 @@ class FilterBox extends ProxyBase {
 	}
 
 	setFromSubHashes (subHashes, {force = false, $iptSearch = null} = {}) {
+		// TODO(unpack) refactor
 		const unpacked = {};
 		subHashes.forEach(s => {
 			const unpackedPart = UrlUtil.unpackSubHash(s, true);
@@ -1986,10 +1988,14 @@ class Filter extends FilterBase {
 
 	addItem (item) {
 		if (item == null) return;
+
 		if (item instanceof Array) {
 			const len = item.length;
 			for (let i = 0; i < len; ++i) this.addItem(item[i]);
-		} else if (!this.__itemsSet.has(item.item || item)) {
+			return;
+		}
+
+		if (!this.__itemsSet.has(item.item || item)) {
 			item = item instanceof FilterItem ? item : new FilterItem({item});
 			Filter._validateItemNest(item, this._nests);
 
@@ -2216,14 +2222,14 @@ class SourceFilter extends Filter {
 	static _SORT_ITEMS_MINI (a, b) {
 		a = a.item ?? a;
 		b = b.item ?? b;
-		const valA = BrewUtil.hasSourceJson(a) ? 2 : SourceUtil.isNonstandardSource(a) ? 1 : 0;
-		const valB = BrewUtil.hasSourceJson(b) ? 2 : SourceUtil.isNonstandardSource(b) ? 1 : 0;
+		const valA = BrewUtil2.hasSourceJson(a) ? 2 : SourceUtil.isNonstandardSource(a) ? 1 : 0;
+		const valB = BrewUtil2.hasSourceJson(b) ? 2 : SourceUtil.isNonstandardSource(b) ? 1 : 0;
 		return SortUtil.ascSort(valA, valB) || SortUtil.ascSortLower(Parser.sourceJsonToFull(a), Parser.sourceJsonToFull(b));
 	}
 
 	static _getDisplayHtmlMini (item) {
 		item = item.item || item;
-		const isBrewSource = BrewUtil.hasSourceJson(item);
+		const isBrewSource = BrewUtil2.hasSourceJson(item);
 		const isNonStandardSource = !isBrewSource && SourceUtil.isNonstandardSource(item);
 		return `<span ${isBrewSource ? `title="(Homebrew)"` : isNonStandardSource ? `title="(UA/Etc.)"` : ""} class="glyphicon ${isBrewSource ? `glyphicon-glass` : isNonStandardSource ? `glyphicon-file` : `glyphicon-book`}"></span> ${Parser.sourceJsonToAbv(item)}`;
 	}
@@ -2331,6 +2337,7 @@ class SourceFilter extends Filter {
 			clazz: `btn btn-default ${opts.isMulti ? "btn-xxs" : "btn-xs"}`,
 			html: `<span class="glyphicon glyphicon-option-vertical"></span>`,
 			click: evt => ContextUtil.pOpenMenu(evt, menu),
+			title: "Other Options",
 		});
 
 		const btnOnlyPrimary = e_({
@@ -3139,7 +3146,12 @@ class RangeFilter extends FilterBase {
 
 	addItem (item) {
 		if (item == null) return;
-		if (item instanceof Array) return item.forEach(it => this.addItem(it));
+
+		if (item instanceof Array) {
+			const len = item.length;
+			for (let i = 0; i < len; ++i) this.addItem(item[i]);
+			return;
+		}
 
 		if (this._labels) {
 			if (!this._labels.some(it => it === item)) this._labels.push(item);

@@ -41,12 +41,15 @@ class BlacklistUtil {
 		this._addData(out, {monster: MiscUtil.copy(await DataUtil.monster.pLoadAll())});
 		this._addData(out, {spell: MiscUtil.copy(await DataUtil.spell.pLoadAll())});
 		this._addData(out, MiscUtil.copy(await DataUtil.class.loadRawJSON()));
-		this._addData(out, MiscUtil.copy(await DataUtil.race.loadJSON()));
+		this._addData(out, MiscUtil.copy(await DataUtil.race.loadJSON({isAddBaseRaces: true})));
 
 		const jsons = await Promise.all(this._BASIC_FILES.map(url => DataUtil.loadJSON(`${Renderer.get().baseUrl}data/${url}`)));
-		for (const json of jsons) {
-			if (json.variant) json.variant.forEach(it => it.source = it.source || it.inherits.source);
-			this._addData(out, await json);
+		for (let json of jsons) {
+			if (json.magicvariant) {
+				json = MiscUtil.copy(json);
+				json.magicvariant.forEach(it => it.source = SourceUtil.getEntitySource(it));
+			}
+			this._addData(out, json);
 		}
 
 		return out;
@@ -151,6 +154,17 @@ class BlacklistUi {
 
 			MiscUtil.set(this._subBlacklistEntries, "itemGroup", itemGroupHash, subBlacklist);
 		}
+
+		for (const it of (this._data.race || []).filter(it => it._isBaseRace)) {
+			const baseRaceHash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_RACES](it);
+
+			const subBlacklist = it._subraces.map(sr => {
+				const hash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_RACES](sr);
+				return {displayName: sr.name, hash, category: "race", source: sr.source};
+			});
+
+			MiscUtil.set(this._subBlacklistEntries, "race", baseRaceHash, subBlacklist);
+		}
 	}
 
 	_getDisplayValues (category, source) {
@@ -202,7 +216,7 @@ class BlacklistUi {
 
 			<hr class="${this._isCompactUi ? "hr-2" : "hr-5"}">
 
-			<h4 class="my-0">Exclusion List</h4>
+			<h4 class="my-0">Blacklist</h4>
 			<div class="text-muted ${this._isCompactUi ? "mb-2" : "mb-3"}"><i>Rows marked with an asterisk (*) in a field match everything in that field.</i></div>
 
 			<div class="ve-flex-col min-h-0">
@@ -293,7 +307,7 @@ class BlacklistUi {
 		this._$wrpSelName = $(`<div class="w-100 ve-flex"></div>`);
 		this._doHandleSourceCategorySelChange();
 
-		const $btnAddExclusion = $(`<button class="btn btn-default btn-xs">Add Exclusion</button>`)
+		const $btnAddExclusion = $(`<button class="btn btn-default btn-xs">Add to Blacklist</button>`)
 			.click(() => this._pAdd());
 		// endregion
 
@@ -527,7 +541,7 @@ class BlacklistUi {
 		this._list.addItem(listItem);
 	}
 
-	_addListItem_getItemStyles () { return `no-click ve-flex-v-center lst__row lst--border lst__row-inner no-shrink`; }
+	_addListItem_getItemStyles () { return `no-click ve-flex-v-center lst__row lst--border veapp__list-row lst__row-inner no-shrink`; }
 
 	async _pAdd () {
 		const {hash, name: displayName, category: categoryName} = this._comp.name;
@@ -610,7 +624,7 @@ class BlacklistUi {
 	}
 
 	async _pImport_getUserUpload () {
-		return DataUtil.pUserUpload({expectedFileType: "content-blacklist"});
+		return DataUtil.pUserUpload({expectedFileTypes: ["content-blacklist"]});
 	}
 
 	async _pImport (evt) {

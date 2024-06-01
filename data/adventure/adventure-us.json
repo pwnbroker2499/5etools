@@ -135,7 +135,203 @@
 											"title": "Map 5.11: Brokenveil Marsh",
 											"width": 2550,
 											"height": 1650,
-											"imageType": "map"
+											"imageType": "map",
+											"mapRegions": [
+												{
+													"area": "91c",
+													"points": [
+														[
+															191,
+															466
+														],
+														[
+															191,
+															583
+														],
+														[
+															326,
+															583
+														],
+														[
+															326,
+															466
+														]
+													]
+												},
+												{
+													"area": "918",
+													"points": [
+														[
+															582,
+															694
+														],
+														[
+															582,
+															797
+														],
+														[
+															699,
+															797
+														],
+														[
+															699,
+															694
+														]
+													]
+												},
+												{
+													"area": "923",
+													"points": [
+														[
+															157,
+															946
+														],
+														[
+															157,
+															1057
+														],
+														[
+															265,
+															1057
+														],
+														[
+															265,
+															946
+														]
+													]
+												},
+												{
+													"area": "920",
+													"points": [
+														[
+															627,
+															1268
+														],
+														[
+															627,
+															1381
+														],
+														[
+															742,
+															1381
+														],
+														[
+															742,
+															1268
+														]
+													]
+												},
+												{
+													"area": "912",
+													"points": [
+														[
+															1076,
+															543
+														],
+														[
+															1076,
+															650
+														],
+														[
+															1195,
+															650
+														],
+														[
+															1195,
+															543
+														]
+													]
+												},
+												{
+													"area": "90b",
+													"points": [
+														[
+															1329,
+															995
+														],
+														[
+															1329,
+															1103
+														],
+														[
+															1439,
+															1103
+														],
+														[
+															1439,
+															995
+														]
+													]
+												},
+												{
+													"area": "908",
+													"points": [
+														[
+															1805,
+															790
+														],
+														[
+															1805,
+															898
+														],
+														[
+															1920,
+															898
+														],
+														[
+															1920,
+															790
+														]
+													]
+												},
+												{
+													"area": "905",
+													"points": [
+														[
+															2086,
+															369
+														],
+														[
+															2086,
+															472
+														],
+														[
+															2203,
+															472
+														],
+														[
+															2203,
+															369
+														]
+													]
+												},
+												{
+													"area": "904",
+													"points": [
+														[
+															2386,
+															143
+														],
+														[
+															2386,
+															243
+														],
+														[
+															2495,
+															243
+														],
+														[
+															2495,
+															143
+														]
+													]
+												}
+											],
+											"hrefThumbnail": {
+												"type": "internal",
+												"path": "book/EGW/thumbnail/121-5.11-brokenveil-marsh.webp"
+											},
+											"id": "000"
 										},
 										{
 											"type": "image",
@@ -146,7 +342,10 @@
 											"title": "Map 5.11: Brokenveil Marsh (Player Version)",
 											"width": 2550,
 											"height": 1650,
-											"imageType": "mapPlayer"
+											"imageType": "mapPlayer",
+											"mapParent": {
+												"id": "000"
+											}
 										}
 									]
 								}
@@ -652,7 +851,289 @@
 													"title": "Map 5.12: Fort Venture",
 													"width": 2550,
 													"height": 1650,
-													"imageType": "map"
+													"imageType": "map",
+													"mapRegions": [
+														{
+															"area": "941",
+															"points": [
+																[
+																	686,
+																	591
+																],
+																[
+																	686,
+																	1055
+																],
+																[
+																	1150,
+																	1055
+																],
+																[
+																	1150,
+																	591
+																]
+															]
+														},
+														{
+															"area": "949",
+															"points": [
+																[
+																	537,
+																	677
+																],
+																[
+																	537,
+																	822
+																],
+																[
+																	677,
+																	822
+																],
+																[
+																	677,
+																	677
+																]
+															]
+														},
+														{
+															"area": "960",
+															"points": [
+																[
+																	683,
+																	1146
+																],
+																[
+																	683,
+																	1293
+																],
+																[
+																	715,
+																	1293
+																],
+																[
+																	715,
+																	1146
+																]
+															]
+														},
+														{
+															"area": "950",
+															"points": [
+																[
+																	1150,
+																	528
+																],
+																[
+																	1057,
+																	415
+																],
+																[
+																	1244,
+																	272
+																],
+																[
+																	1334,
+																	389
+																],
+																[
+																	1305,
+																	411
+																],
+																[
+																	1289,
+																	398
+																],
+																[
+																	1278,
+																	382
+																],
+																[
+																	1242,
+																	407
+																],
+																[
+																	1226,
+																	425
+																],
+																[
+																	1159,
+																	476
+																],
+																[
+																	1181,
+																	509
+																]
+															]
+														},
+														{
+															"area": "959",
+															"points": [
+																[
+																	1414,
+																	299
+																],
+																[
+																	1505,
+																	301
+																],
+																[
+																	1501,
+																	390
+																],
+																[
+																	1471,
+																	390
+																],
+																[
+																	1467,
+																	375
+																],
+																[
+																	1454,
+																	374
+																],
+																[
+																	1454,
+																	392
+																],
+																[
+																	1414,
+																	391
+																]
+															]
+														},
+														{
+															"area": "953",
+															"points": [
+																[
+																	1588,
+																	270
+																],
+																[
+																	1588,
+																	419
+																],
+																[
+																	1737,
+																	419
+																],
+																[
+																	1737,
+																	270
+																]
+															]
+														},
+														{
+															"area": "95c",
+															"points": [
+																[
+																	1792,
+																	413
+																],
+																[
+																	1792,
+																	508
+																],
+																[
+																	1942,
+																	508
+																],
+																[
+																	1942,
+																	413
+																]
+															]
+														},
+														{
+															"area": "93c",
+															"points": [
+																[
+																	1385,
+																	647
+																],
+																[
+																	1385,
+																	1002
+																],
+																[
+																	1969,
+																	1002
+																],
+																[
+																	1969,
+																	647
+																]
+															]
+														},
+														{
+															"area": "933",
+															"points": [
+																[
+																	1264,
+																	1147
+																],
+																[
+																	1264,
+																	1382
+																],
+																[
+																	1824,
+																	1382
+																],
+																[
+																	1824,
+																	1147
+																]
+															]
+														},
+														{
+															"area": "937",
+															"points": [
+																[
+																	974,
+																	1145
+																],
+																[
+																	974,
+																	1382
+																],
+																[
+																	1155,
+																	1382
+																],
+																[
+																	1155,
+																	1145
+																]
+															]
+														},
+														{
+															"area": "92b",
+															"points": [
+																[
+																	2209,
+																	683
+																],
+																[
+																	2209,
+																	969
+																],
+																[
+																	2294,
+																	969
+																],
+																[
+																	2294,
+																	683
+																]
+															]
+														}
+													],
+													"hrefThumbnail": {
+														"type": "internal",
+														"path": "book/EGW/thumbnail/123-5.12-fort-venture.webp"
+													},
+													"id": "001"
 												},
 												{
 													"type": "image",
@@ -663,7 +1144,11 @@
 													"title": "Map 5.12: Fort Venture (Player Version)",
 													"width": 2550,
 													"height": 1560,
-													"imageType": "mapPlayer"
+													"imageType": "mapPlayer",
+													"mapParent": {
+														"id": "001",
+														"autoScale": true
+													}
 												}
 											]
 										}
@@ -686,7 +1171,7 @@
 									]
 								},
 								"At any given time, each watchtower (including the two towers bordering the gate) is occupied by a Dwendalian {@creature guard} equipped with a crossbow and a torch. The guards work in eight-hour shifts, with two guards present at each watchtower during shift changes. Characters who attempt to sneak into Fort Venture must find a way to avoid being spotted by the watchtower guards, whose position gives them advantage on all Wisdom ({@skill Perception}) checks to notice activity on the grounds around or inside the palisade.",
-								"Strangers approaching the fort are hailed by the watchtower guards and ordered to identify themselves. At the first sign of trouble (and the guards are inclined to view anything out of the ordinary as ‘trouble'), a guard sounds an alarm on a horn whose call can be heard across the fortress.",
+								"Strangers approaching the fort are hailed by the watchtower guards and ordered to identify themselves. At the first sign of trouble (and the guards are inclined to view anything out of the ordinary as 'trouble'), a guard sounds an alarm on a horn whose call can be heard across the fortress.",
 								{
 									"type": "entries",
 									"name": "Bear Traps",
@@ -1081,7 +1566,7 @@
 									"page": 262,
 									"id": "957",
 									"entries": [
-										"In addition to the playing card set and dice they use for entertainment, the two guards each have a coin purse containing 26 cp and 17 cp, respectively. In addition to the{@i hunter's coat} Alonne Frith wears (see {@book chapter 6|EGW|7|Hunter's Coat}), one guard also carries Frith's weapon, a {@item +1 Scimitar||black-bladed +1 scimitar}, but is unaware of its magical properties and doesn't use the weapon in combat."
+										"In addition to the playing card set and dice they use for entertainment, the two guards each have a coin purse containing 26 cp and 17 cp, respectively. In addition to the {@i hunter's coat} Alonne Frith wears (see {@book chapter 6|EGW|7|Hunter's Coat}), one guard also carries Frith's weapon, a {@item +1 Scimitar||black-bladed +1 scimitar}, but is unaware of its magical properties and doesn't use the weapon in combat."
 									]
 								},
 								{
